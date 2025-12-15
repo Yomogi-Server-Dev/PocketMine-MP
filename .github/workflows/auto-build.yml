@@ -3,10 +3,10 @@ name: Auto Build Custom PocketMine-MP
 on:
   push:
     branches:
-      - customize
+      - "customize*"
   pull_request:
     branches:
-      - customize
+      - "customize*"
 
 jobs:
   build:
@@ -80,7 +80,7 @@ jobs:
           COMMIT_HASH=$(git rev-parse --short HEAD)
           # JSTタイムゾーンで時刻を取得
           BUILD_TIME_JST=$(TZ=Asia/Tokyo date +"%Y%m%d-%H%M%S")
-          BUILD_NAME="CustomPocketMine-${BUILD_TIME_JST}-${COMMIT_HASH}"
+          BUILD_NAME="CustomPocketMine-${GITHUB_REF##*/}-${BUILD_TIME_JST}-${COMMIT_HASH}"          
           
           echo "build_name=$BUILD_NAME" >> $GITHUB_OUTPUT
           echo "time_jst=$BUILD_TIME_JST" >> $GITHUB_OUTPUT
