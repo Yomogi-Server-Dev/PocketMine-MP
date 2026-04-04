@@ -46,6 +46,7 @@ final class ResourcePackTransferStateTest extends TestCase{
 	public function testTickBudgetHonoursConfiguredLimits() : void{
 		$config = new ResourcePackTransferConfig(
 			enabled: true,
+			chunkSize: 64 * 1024,
 			initialWindow: 1,
 			maxWindow: 4,
 			maxChunksPerTick: 2,
@@ -103,6 +104,7 @@ final class ResourcePackTransferStateTest extends TestCase{
 	private function createState(?ResourcePackTransferConfig $config = null) : ResourcePackTransferState{
 		$config ??= new ResourcePackTransferConfig(
 			enabled: true,
+			chunkSize: 64 * 1024,
 			initialWindow: 1,
 			maxWindow: 4,
 			maxChunksPerTick: 3,
