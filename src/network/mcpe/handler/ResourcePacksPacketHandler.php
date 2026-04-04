@@ -331,6 +331,7 @@ class ResourcePacksPacketHandler extends PacketHandler{
 		}
 		$this->requestQueue->enqueue([$pack, $packet->chunkIndex]);
 		if($this->transferConfig->enabled){
+			$this->processAdaptiveChunkRequestQueue();
 			return true;
 		}
 
@@ -405,7 +406,7 @@ class ResourcePacksPacketHandler extends PacketHandler{
 			));
 
 			$this->session
-				->sendLowPriorityDataPacketWithReceipt(ResourcePackChunkDataPacket::create($packId, $chunkIndex, $offset, $chunkData))
+				->sendLowPriorityDataPacketWithReceipt(ResourcePackChunkDataPacket::create($packId, $chunkIndex, $offset, $chunkData), true)
 				->onCompletion(
 					function() use ($packId, $chunkIndex) : void{
 						$ackAt = microtime(true);
