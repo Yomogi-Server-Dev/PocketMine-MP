@@ -87,6 +87,9 @@ resource-pack-transfer:
   #Enable the adaptive resource pack transfer scheduler.
   #Disable this to fall back to the legacy one-chunk-at-a-time ACK chain.
   enabled: true
+  #Chunk size advertised to clients for resource pack download.
+  #Smaller chunks reduce first-byte stall risk on weak mobile networks at the cost of more ACK overhead.
+  chunk-size: 65536
   #Initial ACK-gated send window per session.
   initial-window: 1
   #Maximum ACK-gated send window per session.

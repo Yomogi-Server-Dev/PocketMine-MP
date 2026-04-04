@@ -33,10 +33,13 @@ use function min;
 final class ResourcePackTransferConfig{
 	private const CONFIG_ROOT = "resource-pack-transfer";
 	private const DEFAULT_ACK_SAMPLE_WINDOW = 8;
-	private const MIN_BYTES_PER_TICK = 256 * 1024;
+	private const DEFAULT_CHUNK_SIZE = 64 * 1024;
+	private const MIN_CHUNK_SIZE = 32 * 1024;
+	private const MAX_CHUNK_SIZE = 256 * 1024;
 
 	public function __construct(
 		public readonly bool $enabled,
+		public readonly int $chunkSize,
 		public readonly int $initialWindow,
 		public readonly int $maxWindow,
 		public readonly int $maxChunksPerTick,
@@ -49,6 +52,10 @@ final class ResourcePackTransferConfig{
 	){}
 
 	public static function fromConfig(ServerConfigGroup $configGroup) : self{
+		$chunkSize = min(
+			self::MAX_CHUNK_SIZE,
+			max(self::MIN_CHUNK_SIZE, $configGroup->getPropertyInt(self::CONFIG_ROOT . ".chunk-size", self::DEFAULT_CHUNK_SIZE))
+		);
 		$initialWindow = max(1, $configGroup->getPropertyInt(self::CONFIG_ROOT . ".initial-window", 1));
 		$maxWindow = max($initialWindow, $configGroup->getPropertyInt(self::CONFIG_ROOT . ".max-window", 4));
 		$ackFastThresholdMs = max(1, $configGroup->getPropertyInt(self::CONFIG_ROOT . ".ack-fast-threshold-ms", 150));
@@ -56,10 +63,11 @@ final class ResourcePackTransferConfig{
 
 		return new self(
 			enabled: $configGroup->getPropertyBool(self::CONFIG_ROOT . ".enabled", true),
+			chunkSize: $chunkSize,
 			initialWindow: $initialWindow,
 			maxWindow: $maxWindow,
 			maxChunksPerTick: max(1, $configGroup->getPropertyInt(self::CONFIG_ROOT . ".max-chunks-per-tick", 2)),
-			maxBytesPerTick: max(self::MIN_BYTES_PER_TICK, $configGroup->getPropertyInt(self::CONFIG_ROOT . ".max-bytes-per-tick", 1024 * 1024)),
+			maxBytesPerTick: max($chunkSize, $configGroup->getPropertyInt(self::CONFIG_ROOT . ".max-bytes-per-tick", 1024 * 1024)),
 			stallTimeoutMs: max(1000, $configGroup->getPropertyInt(self::CONFIG_ROOT . ".stall-timeout-ms", 10_000)),
 			ackFastThresholdMs: $ackFastThresholdMs,
 			ackSlowThresholdMs: $ackSlowThresholdMs,
@@ -71,6 +79,7 @@ final class ResourcePackTransferConfig{
 	public static function legacy() : self{
 		return new self(
 			enabled: false,
+			chunkSize: 256 * 1024,
 			initialWindow: 1,
 			maxWindow: 1,
 			maxChunksPerTick: 1,

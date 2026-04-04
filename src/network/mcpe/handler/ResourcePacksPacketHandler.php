@@ -61,7 +61,7 @@ use function substr;
  * packs to the client.
  */
 class ResourcePacksPacketHandler extends PacketHandler{
-	private const PACK_CHUNK_SIZE = 256 * 1024; //256KB
+	private const LEGACY_PACK_CHUNK_SIZE = 256 * 1024; //256KB
 
 	/**
 	 * Larger values allow downloading more chunks at the same time, increasing download speed, but the client may choke
@@ -103,6 +103,8 @@ class ResourcePacksPacketHandler extends PacketHandler{
 	private ResourcePackTransferConfig $transferConfig;
 	private ResourcePackChunkProvider $chunkProvider;
 	private ResourcePackTransferState $transferState;
+	/** @phpstan-var positive-int */
+	private int $packChunkSize;
 
 	/**
 	 * @param ResourcePack[] $resourcePackStack
@@ -124,13 +126,16 @@ class ResourcePacksPacketHandler extends PacketHandler{
 		$this->requestQueue = new \SplQueue();
 		$this->transferConfig = $transferConfig ?? ResourcePackTransferConfig::legacy();
 		$this->chunkProvider = $chunkProvider ?? new DefaultResourcePackChunkProvider();
+		/** @var positive-int $packChunkSize */
+		$packChunkSize = $this->transferConfig->enabled ? $this->transferConfig->chunkSize : self::LEGACY_PACK_CHUNK_SIZE;
+		$this->packChunkSize = $packChunkSize;
 
 		$packMetadata = [];
 		foreach($resourcePackStack as $pack){
 			$packId = $pack->getPackId();
 			$this->resourcePacksById[$packId] = $pack;
 			$packMetadata[$packId] = [
-				"totalChunks" => (int) ceil($pack->getPackSize() / self::PACK_CHUNK_SIZE),
+				"totalChunks" => (int) ceil($pack->getPackSize() / $this->packChunkSize),
 				"sizeBytes" => $pack->getPackSize(),
 			];
 		}
@@ -226,8 +231,8 @@ class ResourcePacksPacketHandler extends PacketHandler{
 
 					$this->session->sendDataPacket(ResourcePackDataInfoPacket::create(
 						$pack->getPackId(),
-						self::PACK_CHUNK_SIZE,
-						(int) ceil($pack->getPackSize() / self::PACK_CHUNK_SIZE),
+						$this->packChunkSize,
+						(int) ceil($pack->getPackSize() / $this->packChunkSize),
 						$pack->getPackSize(),
 						$pack->getSha256(),
 						false,
@@ -314,7 +319,7 @@ class ResourcePacksPacketHandler extends PacketHandler{
 			return false;
 		}
 
-		$offset = $packet->chunkIndex * self::PACK_CHUNK_SIZE;
+		$offset = $packet->chunkIndex * $this->packChunkSize;
 		if($offset < 0 || $offset >= $pack->getPackSize()){
 			$this->disconnectWithError("Invalid out-of-bounds request for chunk $packet->chunkIndex of $packet->packId: offset $offset, file size " . $pack->getPackSize());
 			return false;
@@ -354,8 +359,10 @@ class ResourcePacksPacketHandler extends PacketHandler{
 		[$pack, $chunkIndex] = $this->requestQueue->dequeue();
 
 		$packId = $pack->getPackId();
-		$offset = $chunkIndex * self::PACK_CHUNK_SIZE;
-		$chunkData = $this->chunkProvider->getChunk($pack, $offset, self::PACK_CHUNK_SIZE);
+		/** @var positive-int $chunkSize */
+		$chunkSize = $this->packChunkSize;
+		$offset = $chunkIndex * $this->packChunkSize;
+		$chunkData = $this->chunkProvider->getChunk($pack, $offset, $chunkSize);
 		$this->activeRequests++;
 		$this->session
 			->sendDataPacketWithReceipt(ResourcePackChunkDataPacket::create($packId, $chunkIndex, $offset, $chunkData))
@@ -380,8 +387,8 @@ class ResourcePacksPacketHandler extends PacketHandler{
 			/** @var int $chunkIndex */
 			[$pack, $chunkIndex] = $this->requestQueue->bottom();
 
-			$offset = $chunkIndex * self::PACK_CHUNK_SIZE;
-			$estimatedChunkBytes = min(self::PACK_CHUNK_SIZE, $pack->getPackSize() - $offset);
+			$offset = $chunkIndex * $this->packChunkSize;
+			$estimatedChunkBytes = min($this->packChunkSize, $pack->getPackSize() - $offset);
 			if(!$this->transferState->consumeTickBudgetIfPossible($estimatedChunkBytes)){
 				return;
 			}
@@ -389,7 +396,9 @@ class ResourcePacksPacketHandler extends PacketHandler{
 			$this->requestQueue->dequeue();
 
 			$packId = $pack->getPackId();
-			$chunkData = $this->chunkProvider->getChunk($pack, $offset, self::PACK_CHUNK_SIZE);
+			/** @var positive-int $chunkSize */
+			$chunkSize = $this->packChunkSize;
+			$chunkData = $this->chunkProvider->getChunk($pack, $offset, $chunkSize);
 			$sendAt = microtime(true);
 			$this->transferState->markChunkSent($packId, $chunkIndex, strlen($chunkData), $sendAt);
 			$this->debugTransfer(sprintf(
