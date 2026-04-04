@@ -815,7 +815,12 @@ class NetworkSession{
 			PacketBatch::encodeRaw($stream, $buffer);
 
 			if($this->enableCompression){
-				$batch = $this->server->prepareBatch($stream->getData(), $this->compressor, $syncMode, Timings::$playerNetworkSendCompressSessionBuffer);
+				$batchBuffer = $stream->getData();
+				if($lowPriority){
+					$batch = chr(CompressionAlgorithm::NONE) . $batchBuffer;
+				}else{
+					$batch = $this->server->prepareBatch($batchBuffer, $this->compressor, $syncMode, Timings::$playerNetworkSendCompressSessionBuffer);
+				}
 			}else{
 				$batch = $stream->getData();
 			}
