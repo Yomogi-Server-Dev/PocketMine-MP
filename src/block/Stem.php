@@ -23,14 +23,11 @@ declare(strict_types=1);
 
 namespace pocketmine\block;
 
-use pocketmine\block\utils\BlockEventHelper;
-use pocketmine\block\utils\CropGrowthHelper;
 use pocketmine\block\utils\FortuneDropHelper;
 use pocketmine\data\runtime\RuntimeDataDescriber;
 use pocketmine\item\Item;
 use pocketmine\item\VanillaItems;
 use pocketmine\math\Facing;
-use function array_rand;
 
 abstract class Stem extends Crops{
 	protected int $facing = Facing::UP;
@@ -58,36 +55,6 @@ abstract class Stem extends Crops{
 			$this->position->getWorld()->setBlock($this->position, $this->setFacing(Facing::UP));
 		}
 		parent::onNearbyBlockChange();
-	}
-
-	public function ticksRandomly() : bool{
-		return $this->age < self::MAX_AGE || $this->facing === Facing::UP;
-	}
-
-	public function onRandomTick() : void{
-		if($this->facing === Facing::UP && CropGrowthHelper::canGrow($this)){
-			$world = $this->position->getWorld();
-			if($this->age < self::MAX_AGE){
-				$block = clone $this;
-				++$block->age;
-				BlockEventHelper::grow($this, $block, null);
-			}else{
-				$grow = $this->getPlant();
-				foreach(Facing::HORIZONTAL as $side){
-					if($this->getSide($side)->hasSameTypeId($grow)){
-						return;
-					}
-				}
-
-				$facing = Facing::HORIZONTAL[array_rand(Facing::HORIZONTAL)];
-				$side = $this->getSide($facing);
-				if($side->getTypeId() === BlockTypeIds::AIR && $side->getSide(Facing::DOWN)->hasTypeTag(BlockTypeTags::DIRT)){
-					if(BlockEventHelper::grow($side, $grow, null)){
-						$this->position->getWorld()->setBlock($this->position, $this->setFacing($facing));
-					}
-				}
-			}
-		}
 	}
 
 	public function getDropsForCompatibleTool(Item $item) : array{
