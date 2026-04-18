@@ -26,14 +26,12 @@ namespace pocketmine\block;
 use pocketmine\block\utils\Ageable;
 use pocketmine\block\utils\AgeableTrait;
 use pocketmine\block\utils\BlockEventHelper;
-use pocketmine\block\utils\CropGrowthHelper;
 use pocketmine\block\utils\StaticSupportTrait;
 use pocketmine\item\Fertilizer;
 use pocketmine\item\Item;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 use pocketmine\player\Player;
-use function mt_rand;
 
 abstract class Crops extends Flowable implements Ageable{
 	use AgeableTrait;
@@ -57,21 +55,5 @@ abstract class Crops extends Flowable implements Ageable{
 		}
 
 		return false;
-	}
-
-	public function ticksRandomly() : bool{
-		return $this->age < self::MAX_AGE;
-	}
-
-	public function onRandomTick() : void{
-		if($this->age >= self::MAX_AGE){
-			return;
-		}
-
-		if(mt_rand(1, 6) === 1){
-			$block = clone $this;
-			++$block->age;
-			BlockEventHelper::grow($this, $block, null);
-		}
 	}
 }

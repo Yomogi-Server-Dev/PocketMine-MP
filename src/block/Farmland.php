@@ -32,11 +32,9 @@ use pocketmine\math\Facing;
 class Farmland extends Transparent{
 	public const MAX_WETNESS = 7;
 	protected int $wetness = 7;
-    private int $waterPositionIndex = -1;
 
 	protected function describeBlockOnlyState(RuntimeDataDescriber $w) : void{
 		$w->boundedIntAuto(0, self::MAX_WETNESS, $this->wetness);
-		$w->boundedIntAuto(-1, 161, $this->waterPositionIndex);
 	}
 	public function getWetness() : int{
 		return $this->wetness;
@@ -61,24 +59,9 @@ class Farmland extends Transparent{
 		}
 	}
 
-	public function ticksRandomly() : bool{
-		return true;
-	}
-
-	public function onRandomTick() : void{
-		if($this->wetness < self::MAX_WETNESS){
-			$this->position->getWorld()->setBlock($this->position, $this->setWetness(self::MAX_WETNESS));
-		}
-	}
-
 	public function onEntityLand(Entity $entity) : ?float{
 		// 踏んだ時の処理を削除
 		return null;
-	}
-
-	protected function canHydrate() : bool{
-		// 水源チェック
-		return true;
 	}
 
 	public function getDropsForCompatibleTool(Item $item) : array{
