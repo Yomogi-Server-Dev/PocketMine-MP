@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4141d2fe75d89cfcf8a2db6f83689e3b",
+    "content-hash": "f360cc27fc5a5cf6b34dabcc0004afef",
     "packages": [
         {
             "name": "adhocore/json-comment",
@@ -256,16 +256,16 @@
         },
         {
             "name": "pocketmine/bedrock-protocol",
-            "version": "56.0.0+bedrock-1.26.10",
+            "version": "56.1.0+bedrock-1.26.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/pmmp/BedrockProtocol.git",
-                "reference": "4a689e2d2eae2142bda56f031866fa9e81d4feae"
+                "reference": "d73a7ddf5bf0a6fda88afed282d7875da757cf26"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/pmmp/BedrockProtocol/zipball/4a689e2d2eae2142bda56f031866fa9e81d4feae",
-                "reference": "4a689e2d2eae2142bda56f031866fa9e81d4feae",
+                "url": "https://api.github.com/repos/pmmp/BedrockProtocol/zipball/d73a7ddf5bf0a6fda88afed282d7875da757cf26",
+                "reference": "d73a7ddf5bf0a6fda88afed282d7875da757cf26",
                 "shasum": ""
             },
             "require": {
@@ -297,9 +297,9 @@
             "description": "An implementation of the Minecraft: Bedrock Edition protocol in PHP",
             "support": {
                 "issues": "https://github.com/pmmp/BedrockProtocol/issues",
-                "source": "https://github.com/pmmp/BedrockProtocol/tree/56.0.0+bedrock-1.26.10"
+                "source": "https://github.com/pmmp/BedrockProtocol/tree/56.1.0+bedrock-1.26.10"
             },
-            "time": "2026-03-25T22:02:00+00:00"
+            "time": "2026-04-05T00:22:06+00:00"
         },
         {
             "name": "pocketmine/binaryutils",
@@ -1183,11 +1183,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.1.42",
+            "version": "2.1.46",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/1279e1ce86ba768f0780c9d889852b4e02ff40d0",
-                "reference": "1279e1ce86ba768f0780c9d889852b4e02ff40d0",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/a193923fc2d6325ef4e741cf3af8c3e8f54dbf25",
+                "reference": "a193923fc2d6325ef4e741cf3af8c3e8f54dbf25",
                 "shasum": ""
             },
             "require": {
@@ -1232,7 +1232,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-03-17T14:58:32+00:00"
+            "time": "2026-04-01T09:25:14+00:00"
         },
         {
             "name": "phpstan/phpstan-phpunit",
