@@ -44,12 +44,16 @@ final class GarbageCollectorManager{
 	//behavioural changes.
 	private const GC_THRESHOLD_TRIGGER = 100;
 	private const GC_THRESHOLD_MAX = 1_000_000_000;
-	private const GC_THRESHOLD_DEFAULT = 10_001;
-	private const GC_THRESHOLD_STEP = 10_000;
+	private const GC_THRESHOLD_DEFAULT = 100_001;
+	private const GC_THRESHOLD_STEP = 100_000;
+	private const GC_THRESHOLD_GROWTH_MULTIPLIER = 2;
+	private const GC_MIN_INTERVAL_NS = 10_000_000_000;
+	private const GC_EMERGENCY_THRESHOLD_MULTIPLIER = 8;
 
 	private int $threshold = self::GC_THRESHOLD_DEFAULT;
 	private int $collectionTimeTotalNs = 0;
 	private int $runs = 0;
+	private int $lastCollectionTimeNs = 0;
 
 	private \Logger $logger;
 	private TimingsHandler $timings;
@@ -69,7 +73,13 @@ final class GarbageCollectorManager{
 		//by a fixed step
 		//Adapted from zend_gc.c/gc_adjust_threshold() as of PHP 8.3.14
 		if($cyclesCollected < self::GC_THRESHOLD_TRIGGER || $rootsAfterGC >= $this->threshold){
-			$this->threshold = min(self::GC_THRESHOLD_MAX, $this->threshold + self::GC_THRESHOLD_STEP);
+			$this->threshold = min(
+				self::GC_THRESHOLD_MAX,
+				max(
+					$this->threshold + self::GC_THRESHOLD_STEP,
+					$rootsAfterGC * self::GC_THRESHOLD_GROWTH_MULTIPLIER
+				)
+			);
 		}elseif($this->threshold > self::GC_THRESHOLD_DEFAULT){
 			$this->threshold = max(self::GC_THRESHOLD_DEFAULT, $this->threshold - self::GC_THRESHOLD_STEP);
 		}
@@ -85,13 +95,23 @@ final class GarbageCollectorManager{
 			return 0;
 		}
 
+		$start = hrtime(true);
+		if(
+			$this->lastCollectionTimeNs !== 0 &&
+			$start - $this->lastCollectionTimeNs < self::GC_MIN_INTERVAL_NS &&
+			$rootsBefore < $this->threshold * self::GC_EMERGENCY_THRESHOLD_MULTIPLIER
+		){
+			return 0;
+		}
+
 		$this->timings->startTiming();
 
-		$start = hrtime(true);
 		$cycles = gc_collect_cycles();
 		$end = hrtime(true);
+		$this->lastCollectionTimeNs = $end;
 
 		$rootsAfter = gc_status()["roots"];
+		$this->threshold = max($this->threshold, min(self::GC_THRESHOLD_MAX, $rootsBefore * self::GC_THRESHOLD_GROWTH_MULTIPLIER));
 		$this->adjustGcThreshold($cycles, $rootsAfter);
 
 		$this->timings->stopTiming();
